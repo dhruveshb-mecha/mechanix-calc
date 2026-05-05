@@ -18,7 +18,6 @@ class DisplayPanel extends StatelessWidget {
     // Determines what is shown in the main box.
     // If an expression is actively being typed, it shows that.
     // If the expression is empty (e.g., after pressing '='), it shows the result.
-    print('expression: $expression, result: $result, history: $history');
     final String displayText = expression.isNotEmpty ? expression : result;
 
     return Container(

@@ -89,10 +89,11 @@ class CalculatorBloc extends Bloc<CalculatorEvent, CalculatorState> {
 
     try {
       String finalExpression = state.expression
+          .replaceAll(',', '')
           .replaceAll('×', '*')
           .replaceAll('÷', '/');
 
-      Parser p = Parser();
+      GrammarParser p = GrammarParser();
       Expression exp = p.parse(finalExpression);
       ContextModel cm = ContextModel();
       double eval = exp.evaluate(EvaluationType.REAL, cm);
