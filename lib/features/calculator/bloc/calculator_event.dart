@@ -15,6 +15,14 @@ class NumberPressed extends CalculatorEvent {
   List<Object> get props => [number];
 }
 
+class ExpressionChanged extends CalculatorEvent {
+  final String expression;
+  const ExpressionChanged(this.expression);
+
+  @override
+  List<Object> get props => [expression];
+}
+
 class OperatorPressed extends CalculatorEvent {
   final String operator;
   const OperatorPressed(this.operator);

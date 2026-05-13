@@ -38,7 +38,7 @@ void main() {
           const CalculatorState(expression: '5', result: '0', history: []),
           const CalculatorState(expression: '5+', result: '0', history: []),
           const CalculatorState(expression: '5+3', result: '0', history: []),
-          const CalculatorState(
+          CalculatorState(
             expression: '',
             result: '8',
             history: [HistoryItem(expression: '5+3', result: '8')],
@@ -64,27 +64,27 @@ void main() {
           const CalculatorState(expression: '5', result: '0', history: []),
           const CalculatorState(expression: '5+', result: '0', history: []),
           const CalculatorState(expression: '5+3', result: '0', history: []),
-          const CalculatorState(
+          CalculatorState(
             expression: '',
             result: '8',
             history: [HistoryItem(expression: '5+3', result: '8')],
           ),
-          const CalculatorState(
+          CalculatorState(
             expression: '15',
             result: '8',
             history: [HistoryItem(expression: '5+3', result: '8')],
           ),
-          const CalculatorState(
+          CalculatorState(
             expression: '15+',
             result: '8',
             history: [HistoryItem(expression: '5+3', result: '8')],
           ),
-          const CalculatorState(
+          CalculatorState(
             expression: '15+10',
             result: '8',
             history: [HistoryItem(expression: '5+3', result: '8')],
           ),
-          const CalculatorState(
+          CalculatorState(
             expression: '',
             result: '25',
             history: [

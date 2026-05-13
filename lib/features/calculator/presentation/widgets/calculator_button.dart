@@ -23,7 +23,8 @@ class CalculatorButton extends StatelessWidget {
         border: Border.all(color: Colors.black, width: 0.5),
         color: color ?? const Color(0xFF1A1A1A),
       ),
-      child: InkWell(
+      child: GestureDetector(
+        behavior: HitTestBehavior.translucent,
         onTap: onTap,
         child: Center(
           child: icon != null

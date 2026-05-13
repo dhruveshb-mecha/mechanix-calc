@@ -12,6 +12,7 @@ class CalculatorBloc extends Bloc<CalculatorEvent, CalculatorState> {
     on<CalculateResult>(_onCalculateResult);
     on<ToggleSignPressed>(_onToggleSignPressed);
     on<PercentagePressed>(_onPercentagePressed);
+    on<ExpressionChanged>(_onExpressionChanged);
   }
 
   void _onNumberPressed(NumberPressed event, Emitter<CalculatorState> emit) {
@@ -112,7 +113,7 @@ class CalculatorBloc extends Bloc<CalculatorEvent, CalculatorState> {
       }
 
       final updatedHistory = List<HistoryItem>.from(state.history)
-        ..add(HistoryItem(expression: state.expression, result: result));
+        ..insert(0, HistoryItem(expression: state.expression, result: result));
 
       emit(
         state.copyWith(expression: "", result: result, history: updatedHistory),
@@ -145,5 +146,12 @@ class CalculatorBloc extends Bloc<CalculatorEvent, CalculatorState> {
     // Usually percentage divides by 100, but often in calculators it acts as an operator or immediate transform.
     // For simplicity here, we add the symbol and the parser might need to handle it or we handle it during evaluation.
     // math_expressions might not handle % natively as "divide by 100" in all contexts without custom setup.
+  }
+
+  void _onExpressionChanged(
+    ExpressionChanged event,
+    Emitter<CalculatorState> emit,
+  ) {
+    emit(state.copyWith(expression: event.expression, result: ''));
   }
 }

@@ -5,7 +5,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../bloc/calculator_bloc.dart';
 import '../../bloc/calculator_event.dart';
 import '../../bloc/calculator_state.dart';
-import '../widgets/calculator_button.dart';
 import '../widgets/display_panel.dart';
 
 class CalculatorScreen extends StatefulWidget {
@@ -60,13 +59,16 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                       expression: state.expression,
                       result: state.result,
                       history: state.history,
+                      onHistoryItemTap: (expression) {
+                        context.read<CalculatorBloc>().add(
+                          ExpressionChanged(expression),
+                        );
+                      },
                     );
                   },
                 ),
               ),
-              const Expanded(
-                child: ButtonGrid(), // Look how clean this is!
-              ),
+              const Expanded(child: ButtonGrid()),
             ],
           ),
         ),

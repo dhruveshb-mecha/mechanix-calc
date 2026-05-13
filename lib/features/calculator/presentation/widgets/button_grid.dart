@@ -1,6 +1,5 @@
 import 'package:calculator/features/calculator/bloc/calculator_bloc.dart';
 import 'package:calculator/features/calculator/bloc/calculator_event.dart';
-import 'package:calculator/features/calculator/presentation/screens/calculator_screen.dart';
 import 'package:calculator/features/calculator/presentation/widgets/calculator_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
