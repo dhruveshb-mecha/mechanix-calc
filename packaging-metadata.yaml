@@ -7,6 +7,3 @@ applications:
     binary: calculator
     description: "Mechanix Calculator application"
     maintainer: "Mechanix Team <team@mecha.so>"
-    dependencies:
-      - libflutter-elinux-wayland-dev
-      - libflutter-engine-dev

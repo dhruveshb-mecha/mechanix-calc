@@ -167,15 +167,27 @@ def copy-artifact [src: path, dest: path] {
 }
 
 
+def create-launcher [dest: path, binary_name: string, pkg_name: string] {
+    let launcher = $"#!/bin/sh
+APPDIR=\"/usr/share/mechanix/($pkg_name)\"
+exec \"$APPDIR/($binary_name)\" --bundle=\"$APPDIR\" \"$@\"
+"
+    $launcher | save -f $dest
+    chmod 755 $dest
+}
+
+
 def collect-artifacts [app: record, build_dir: path, rpm_root: path, pkg_name: string] {
     print "[INFO] Collecting artifacts..."
 
     let binary_path = validate-binary $build_dir $app.binary
-    let bin_dest = ($rpm_root | path join "usr" "bin")
-    copy-artifact $binary_path $bin_dest
-    chmod 755 ($bin_dest | path join $app.binary)
-
     let share_dest = ($rpm_root | path join "usr" "share" "mechanix" $pkg_name)
+    copy-artifact $binary_path $share_dest
+    chmod 755 ($share_dest | path join $app.binary)
+
+    let bin_dest = ($rpm_root | path join "usr" "bin")
+    if not ($bin_dest | path exists) { mkdir $bin_dest }
+    create-launcher ($bin_dest | path join $app.binary) $app.binary $pkg_name
 
     let lib_src = ($build_dir | path join "lib")
     if ($lib_src | path exists) {
