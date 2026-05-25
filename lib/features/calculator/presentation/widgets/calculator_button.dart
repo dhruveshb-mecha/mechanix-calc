@@ -23,22 +23,23 @@ class CalculatorButton extends StatelessWidget {
         border: Border.all(color: Colors.black, width: 0.5),
         color: color ?? const Color(0xFF1A1A1A),
       ),
-      child: GestureDetector(
-        behavior: HitTestBehavior.translucent,
-        onTap: onTap,
-        child: Center(
-          child: icon != null
-              ? Icon(icon, color: Colors.white, size: 24)
-              : Text(
-                  text,
-                  style: TextStyle(
-                    fontSize: 28,
-                    color: textColor ?? Colors.white,
-                    fontWeight: FontWeight.w300,
-                  ),
+      margin: const EdgeInsets.all(0),
+      child: icon != null
+          ? IconButton(
+              onPressed: onTap,
+              icon: Icon(icon, color: textColor ?? Colors.white),
+            )
+          : TextButton(
+              onPressed: onTap,
+              child: Text(
+                text,
+                style: TextStyle(
+                  fontSize: 28,
+                  color: textColor ?? Colors.white,
+                  fontWeight: FontWeight.w300,
                 ),
-        ),
-      ),
+              ),
+            ),
     );
   }
 }

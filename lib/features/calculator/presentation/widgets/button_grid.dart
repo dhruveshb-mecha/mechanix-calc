@@ -2,19 +2,32 @@ import 'package:calculator/features/calculator/bloc/calculator_bloc.dart';
 import 'package:calculator/features/calculator/bloc/calculator_event.dart';
 import 'package:calculator/features/calculator/presentation/widgets/calculator_button.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class ButtonGrid extends StatelessWidget {
   const ButtonGrid({super.key});
 
-  // Keep the data static so it doesn't re-allocate
-  static const List<List<String>> _layout = [
-    ['AC', '+/-', '%', '÷'],
-    ['7', '8', '9', '×'],
-    ['4', '5', '6', '-'],
-    ['1', '2', '3', '+'],
-    ['⌫', '0', '.', '='],
+  static const List<String> _buttons = [
+    'AC',
+    '+/-',
+    '%',
+    '÷',
+    '7',
+    '8',
+    '9',
+    '×',
+    '4',
+    '5',
+    '6',
+    '-',
+    '1',
+    '2',
+    '3',
+    '+',
+    '⌫',
+    '0',
+    '.',
+    '=',
   ];
 
   @override
@@ -23,31 +36,39 @@ class ButtonGrid extends StatelessWidget {
 
     return Container(
       color: Colors.black,
-      child: Column(
-        children: _layout.map((row) {
-          return Expanded(
-            // Using Expanded instead of hardcoded height
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                vertical: 4.0,
-                horizontal: 8.0,
-              ),
-              child: Row(
-                children: row.map((text) {
-                  return Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 2.0),
-                      child: CalcButton(
-                        text: text,
-                        onTap: () => _handleTap(bloc, text),
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
+      padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 4.0),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // Calculate the aspect ratio dynamically based on available space
+          // 4 columns and 5 rows
+          final double horizontalSpacing = 5.0 * 3; // 3 gaps between 4 columns
+          final double verticalSpacing = 4.0 * 4; // 4 gaps between 5 rows
+
+          final double itemWidth =
+              (constraints.maxWidth - horizontalSpacing) / 4;
+          final double itemHeight =
+              (constraints.maxHeight - verticalSpacing) / 5;
+
+          final double dynamicAspectRatio = itemWidth / itemHeight;
+
+          return GridView.builder(
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _buttons.length,
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 4,
+              mainAxisSpacing: 4,
+              crossAxisSpacing: 5,
+              childAspectRatio: dynamicAspectRatio,
             ),
+            itemBuilder: (context, index) {
+              final text = _buttons[index];
+              return CalcButton(
+                text: text,
+                onTap: () => _handleTap(bloc, text),
+              );
+            },
           );
-        }).toList(),
+        },
       ),
     );
   }
@@ -84,7 +105,6 @@ class CalcButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Business logic for styling stays inside the widget
     final isOperator = ['÷', '×', '-', '+', '='].contains(text);
     final isAction = ['AC', '+/-', '%'].contains(text);
     final color = (isOperator || isAction)

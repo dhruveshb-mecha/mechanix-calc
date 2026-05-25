@@ -58,10 +58,11 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                     return DisplayPanel(
                       expression: state.expression,
                       result: state.result,
+                      errorMessage: state.errorMessage,
                       history: state.history,
-                      onHistoryItemTap: (expression) {
+                      onHistoryItemTap: (expr) {
                         context.read<CalculatorBloc>().add(
-                          ExpressionChanged(expression),
+                          ExpressionChanged(expr),
                         );
                       },
                     );

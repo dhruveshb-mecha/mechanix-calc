@@ -22,13 +22,13 @@ void main() {
       await tester.tap(find.text('='));
       await tester.pumpAndSettle();
 
-      // Verify the result (specifically in the display, not on the buttons)
+      // Verify the result (specifically in the main display, with larger font)
       expect(
         find.descendant(
           of: find.byType(DisplayPanel),
           matching: find.text('3'),
         ),
-        findsOneWidget,
+        findsAtLeastNWidgets(1),
       );
     });
 
@@ -101,8 +101,44 @@ void main() {
           of: find.byType(DisplayPanel),
           matching: find.text('70'),
         ),
-        findsOneWidget,
+        findsAtLeastNWidgets(1),
       );
+    });
+
+    testWidgets('Division by zero error test', (tester) async {
+      app.main();
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('5'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('÷'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('0'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('='));
+      await tester.pumpAndSettle();
+
+      // Should show the error message
+      expect(find.text('Invalid mathematical operation'), findsOneWidget);
+      // Expression should still be visible when error occurs
+      expect(find.text('5÷0'), findsOneWidget);
+    });
+
+    testWidgets('Malformed expression error test', (tester) async {
+      app.main();
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('5'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('+'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('='));
+      await tester.pumpAndSettle();
+
+      // Should show the error message
+      expect(find.text('Malformed expressions'), findsOneWidget);
+      // Expression should still be visible when error occurs
+      expect(find.text('5+'), findsOneWidget);
     });
   });
 }

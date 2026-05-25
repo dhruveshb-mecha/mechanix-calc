@@ -4,6 +4,7 @@ import '../../bloc/calculator_state.dart';
 class DisplayPanel extends StatelessWidget {
   final String expression;
   final String result;
+  final String errorMessage;
   final List<HistoryItem> history;
   final ValueChanged<String>? onHistoryItemTap;
 
@@ -11,14 +12,13 @@ class DisplayPanel extends StatelessWidget {
     super.key,
     required this.expression,
     required this.result,
+    required this.errorMessage,
     this.history = const [],
     this.onHistoryItemTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final String displayText = expression.isNotEmpty ? expression : result;
-
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       alignment: Alignment.bottomRight,
@@ -35,17 +35,41 @@ class DisplayPanel extends StatelessWidget {
               ),
             ),
           ),
-          Text(
-            displayText,
-            maxLines: 1,
-            softWrap: false,
-            overflow: TextOverflow.clip,
-            style: const TextStyle(
-              fontSize: 50,
-              fontWeight: FontWeight.w400,
-              color: Colors.white,
+          if (errorMessage.isNotEmpty) ...[
+            // Show expression on top when there is an error
+            Text(
+              expression,
+              softWrap: true,
+              overflow: TextOverflow.visible,
+              style: const TextStyle(
+                fontSize: 50,
+                fontWeight: FontWeight.w400,
+                color: Colors.white,
+              ),
             ),
-          ),
+            const SizedBox(height: 8),
+            // Show error message below in red and smaller font
+            Text(
+              errorMessage,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w400,
+                color: Colors.white,
+              ),
+            ),
+          ] else
+            // Default behavior: show expression or result
+            Text(
+              expression.isNotEmpty ? expression : result,
+              maxLines: 1,
+              softWrap: false,
+              overflow: TextOverflow.clip,
+              style: const TextStyle(
+                fontSize: 50,
+                fontWeight: FontWeight.w400,
+                color: Colors.white,
+              ),
+            ),
         ],
       ),
     );

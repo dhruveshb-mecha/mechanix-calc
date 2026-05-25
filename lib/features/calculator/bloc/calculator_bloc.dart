@@ -22,7 +22,7 @@ class CalculatorBloc extends Bloc<CalculatorEvent, CalculatorState> {
     } else {
       newExpression += event.number;
     }
-    emit(state.copyWith(expression: newExpression));
+    emit(state.copyWith(expression: newExpression, errorMessage: ''));
   }
 
   void _onOperatorPressed(
@@ -57,16 +57,20 @@ class CalculatorBloc extends Bloc<CalculatorEvent, CalculatorState> {
           expression:
               state.expression.substring(0, state.expression.length - 1) +
               event.operator,
+          errorMessage: '',
         ),
       );
     } else {
       // Otherwise, just append the operator
-      emit(state.copyWith(expression: state.expression + event.operator));
+      emit(state.copyWith(
+        expression: state.expression + event.operator,
+        errorMessage: '',
+      ));
     }
   }
 
   void _onClearPressed(ClearPressed event, Emitter<CalculatorState> emit) {
-    emit(state.copyWith(expression: '', result: '0'));
+    emit(state.copyWith(expression: '', result: '0', errorMessage: ''));
   }
 
   void _onDeletePressed(DeletePressed event, Emitter<CalculatorState> emit) {
@@ -77,6 +81,7 @@ class CalculatorBloc extends Bloc<CalculatorEvent, CalculatorState> {
             0,
             state.expression.length - 1,
           ),
+          errorMessage: '',
         ),
       );
     }
@@ -99,15 +104,24 @@ class CalculatorBloc extends Bloc<CalculatorEvent, CalculatorState> {
       ContextModel cm = ContextModel();
       double eval = exp.evaluate(EvaluationType.REAL, cm);
 
+      // Handle Division by Zero or other invalid mathematical results
+      if (eval.isInfinite || eval.isNaN) {
+        emit(
+          state.copyWith(
+            result: '',
+            errorMessage: 'Invalid mathematical operation',
+          ),
+        );
+        return;
+      }
+
       String result = eval.toString();
       if (result.endsWith('.0')) {
         result = result.substring(0, result.length - 2);
       }
 
-      // Formatting like in original image (comma for thousands)
-      // Basic formatting for demonstration
+      // Formatting for whole numbers
       if (result.length > 3 && !result.contains('.')) {
-        // simple comma injector for whole numbers
         RegExp reg = RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))');
         result = result.replaceAllMapped(reg, (Match m) => '${m[1]},');
       }
@@ -119,7 +133,8 @@ class CalculatorBloc extends Bloc<CalculatorEvent, CalculatorState> {
         state.copyWith(expression: "", result: result, history: updatedHistory),
       );
     } catch (e) {
-      emit(state.copyWith(result: 'Error'));
+      // Catch syntax errors (e.g., malformed expressions like "5++5")
+      emit(state.copyWith(result: '', errorMessage: 'Malformed expressions'));
     }
   }
 
@@ -131,9 +146,15 @@ class CalculatorBloc extends Bloc<CalculatorEvent, CalculatorState> {
 
     String expression = state.expression;
     if (expression.startsWith('-')) {
-      emit(state.copyWith(expression: expression.substring(1)));
+      emit(state.copyWith(
+        expression: expression.substring(1),
+        errorMessage: '',
+      ));
     } else {
-      emit(state.copyWith(expression: '-$expression'));
+      emit(state.copyWith(
+        expression: '-$expression',
+        errorMessage: '',
+      ));
     }
   }
 
@@ -142,7 +163,7 @@ class CalculatorBloc extends Bloc<CalculatorEvent, CalculatorState> {
     Emitter<CalculatorState> emit,
   ) {
     if (state.expression.isEmpty) return;
-    emit(state.copyWith(expression: '${state.expression}%'));
+    emit(state.copyWith(expression: '${state.expression}%', errorMessage: ''));
     // Usually percentage divides by 100, but often in calculators it acts as an operator or immediate transform.
     // For simplicity here, we add the symbol and the parser might need to handle it or we handle it during evaluation.
     // math_expressions might not handle % natively as "divide by 100" in all contexts without custom setup.
@@ -152,6 +173,10 @@ class CalculatorBloc extends Bloc<CalculatorEvent, CalculatorState> {
     ExpressionChanged event,
     Emitter<CalculatorState> emit,
   ) {
-    emit(state.copyWith(expression: event.expression, result: ''));
+    emit(state.copyWith(
+      expression: event.expression,
+      result: '',
+      errorMessage: '',
+    ));
   }
 }
