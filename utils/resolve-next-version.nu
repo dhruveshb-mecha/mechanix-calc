@@ -12,6 +12,7 @@ def main [
 
     let username = ($env.MECHA_PULP_USERNAME? | default "")
     let password = ($env.MECHA_PULP_PASSWORD? | default "")
+    let safe_upstream = if $upstream == "" { "1.0.0" } else { $upstream }
 
     let endpoint = if $format == "deb" {
         $"($base_url)/pulp/api/v3/content/deb/packages/?package=($name)"
@@ -19,9 +20,15 @@ def main [
         $"($base_url)/pulp/api/v3/content/rpm/packages/?name=($name)"
     }
 
-    let headers = if ($username != "" and $password != "") {
+    let basic_token = if ($username != "" and $password != "") {
+        ($username + ":" + $password) | encode base64
+    } else {
+        ""
+    }
+
+    let headers = if $basic_token != "" {
         {
-            Authorization: $"Basic (($"($username):($password)" | encode base64))"
+            Authorization: $"Basic ($basic_token)"
             Accept: "application/json"
         }
     } else {
@@ -61,9 +68,9 @@ def main [
     {
         package_name: $name
         format: $format
-        upstream_version: $upstream
+        upstream_version: $safe_upstream
         current_revision: $current_max_rev
         next_revision: $next_rev
-        full_version: $"($upstream)-($next_rev)"
+        full_version: $"($safe_upstream)-($next_rev)"
     } | to json
 }
