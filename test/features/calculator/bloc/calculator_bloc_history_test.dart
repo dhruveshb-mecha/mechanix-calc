@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:calculator/features/calculator/bloc/calculator_bloc.dart';
-import 'package:calculator/features/calculator/bloc/calculator_event.dart';
-import 'package:calculator/features/calculator/bloc/calculator_state.dart';
+import 'package:mechanix_calculator/features/calculator/bloc/calculator_bloc.dart';
+import 'package:mechanix_calculator/features/calculator/bloc/calculator_event.dart';
+import 'package:mechanix_calculator/features/calculator/bloc/calculator_state.dart';
 
 void main() {
   group('CalculatorBloc', () {

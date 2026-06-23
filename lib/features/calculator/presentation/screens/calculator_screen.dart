@@ -1,5 +1,5 @@
-import 'package:calculator/core/utils/constant.dart';
-import 'package:calculator/features/calculator/presentation/widgets/button_grid.dart';
+import 'package:mechanix_calculator/core/utils/constant.dart';
+import 'package:mechanix_calculator/features/calculator/presentation/widgets/button_grid.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

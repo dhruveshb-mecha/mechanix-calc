@@ -2,8 +2,8 @@ name: packaging-metadata
 version: 1.0.0
 summary: Metadata for Mechanix app packaging
 applications:
-  - name: calculator
+  - name: mechanix_calculator
     folder: .
-    binary: calculator
+    binary: mechanix_calculator
     description: "Mechanix Calculator application"
     maintainer: "Mechanix Team <team@mecha.so>"
