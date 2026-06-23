@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
-import 'package:calculator/main.dart' as app;
-import 'package:calculator/features/calculator/presentation/widgets/display_panel.dart';
+import 'package:mechanix_calculator/main.dart' as app;
+import 'package:mechanix_calculator/features/calculator/presentation/widgets/display_panel.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();

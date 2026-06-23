@@ -1,4 +1,4 @@
-import 'package:calculator/features/calculator/bloc/calculator_event.dart';
+import 'package:mechanix_calculator/features/calculator/bloc/calculator_event.dart';
 import 'package:flutter/services.dart';
 
 final Map<LogicalKeyboardKey, CalculatorEvent> logicalKeyboardKeyMap = {

@@ -1,7 +1,7 @@
-import 'package:calculator/core/utils/constant.dart';
-import 'package:calculator/features/calculator/bloc/calculator_bloc.dart';
-import 'package:calculator/features/calculator/bloc/calculator_event.dart';
-import 'package:calculator/features/calculator/presentation/widgets/calculator_button.dart';
+import 'package:mechanix_calculator/core/utils/constant.dart';
+import 'package:mechanix_calculator/features/calculator/bloc/calculator_bloc.dart';
+import 'package:mechanix_calculator/features/calculator/bloc/calculator_event.dart';
+import 'package:mechanix_calculator/features/calculator/presentation/widgets/calculator_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 

@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:calculator/l10n/app_localizations.dart';
+import 'package:mechanix_calculator/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:show_fps/show_fps.dart';
