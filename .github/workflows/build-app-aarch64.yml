@@ -98,7 +98,7 @@ jobs:
 
       - name: Package RPM
         run: |
-          nu package-rpm.nu calculator ./build/rpm
+          nu package-rpm.nu mechanix_calculator ./build/rpm
 
       - name: Check package sizes
         run: |
