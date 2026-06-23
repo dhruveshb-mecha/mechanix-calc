@@ -46,18 +46,6 @@ jobs:
             libgstreamer-plugins-base1.0-dev \
             rpm build-essential rpm2cpio rpmlint dnf jq pipx
 
-      - name: Install PDFium
-        run: |
-          set -eux
-          curl -L "https://github.com/bblanchon/pdfium-binaries/releases/latest/download/pdfium-linux-arm64.tgz" -o pdfium.tgz
-          mkdir pdfium
-          tar -xzf pdfium.tgz -C pdfium --strip-components=1
-          sudo cp pdfium/libpdfium.so /usr/local/lib/
-          sudo mkdir -p /usr/local/include/pdfium
-          sudo cp pdfium/*.h /usr/local/include/pdfium/
-          sudo cp -r pdfium/cpp /usr/local/include/pdfium/
-          sudo ldconfig
-
       - name: Install Nushell
         run: |
           curl -fsSL https://apt.fury.io/nushell/gpg.key | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/fury-nushell.gpg
@@ -98,7 +86,7 @@ jobs:
 
       - name: Package RPM
         run: |
-          nu package-rpm.nu mechanix_calculator ./build/rpm
+          nu package-rpm.nu calculator ./build/rpm
 
       - name: Check package sizes
         run: |
