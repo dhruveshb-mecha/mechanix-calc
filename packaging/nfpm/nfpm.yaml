@@ -1,0 +1,29 @@
+name: mechanix-calculator
+arch: "${PKG_ARCH}"
+platform: linux
+version: "${PKG_VERSION}"
+release: "${PKG_RELEASE}"
+section: utils
+priority: optional
+maintainer: "Minesh Purohit <mineshp@mechasystems.com>"
+description: Mechanix Calculator application
+homepage: https://github.com/mecha-org/mechanix-calc.git
+license: BSD
+
+contents:
+  - src: ./stage/bundle/mechanix_calculator
+    dst: /usr/share/mechanix/mechanix-calculator/mechanix_calculator
+    file_info:
+      mode: 0755
+  - src: ./stage/bundle/lib
+    dst: /usr/share/mechanix/mechanix-calculator/lib
+  - src: ./stage/bundle/data
+    dst: /usr/share/mechanix/mechanix-calculator/data
+  - src: ./packaging/nfpm/scripts/launcher.sh
+    dst: /usr/bin/mechanix_calculator
+    file_info:
+      mode: 0755
+
+scripts:
+  postinstall: ./packaging/nfpm/scripts/postinstall.sh
+  postremove: ./packaging/nfpm/scripts/postremove.sh
