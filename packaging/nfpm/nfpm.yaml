@@ -10,13 +10,21 @@ description: Mechanix Calculator application
 homepage: https://github.com/mecha-org/mechanix-calc.git
 license: BSD
 
+overrides:
+  rpm:
+    depends:
+      - mechanix-flutter-engine = 3.47.0
+  deb:
+    depends:
+      - "mechanix-flutter-engine (= 3.47.0)"
+
 contents:
   - src: ./stage/bundle/mechanix_calculator
     dst: /usr/share/mechanix/mechanix-calculator/mechanix_calculator
     file_info:
       mode: 0755
-  - src: ./stage/bundle/lib
-    dst: /usr/share/mechanix/mechanix-calculator/lib
+  - src: ./stage/bundle/lib/libapp.so
+    dst: /usr/share/mechanix/mechanix-calculator/lib/libapp.so
   - src: ./stage/bundle/data
     dst: /usr/share/mechanix/mechanix-calculator/data
   - src: ./packaging/nfpm/scripts/launcher.sh
