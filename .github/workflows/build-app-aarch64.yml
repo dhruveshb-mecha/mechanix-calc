@@ -8,6 +8,7 @@ on:
       - dev
       - pre-release
       - build*
+      - publish-system-v1
     paths:
       - ".github/workflows/build-app-aarch64.yml"
       - "packaging/**"
@@ -22,18 +23,21 @@ env:
   RUST_BACKTRACE: short
   RUSTUP_MAX_RETRIES: 10
   CARGO_NET_GIT_FETCH_WITH_CLI: true
-  MECHA_PULP_USERNAME: ${{ secrets.MECHA_PULP_USERNAME }}
-  MECHA_PULP_PASSWORD: ${{ secrets.MECHA_PULP_PASSWORD }}
-  MECHA_PULP_API_URL: ${{ vars.MECHA_PULP_API_URL }}
-  MECHA_PULP_RPMS_REPOSITORY_NAME: ${{ vars.MECHA_PULP_RPMS_REPOSITORY_NAME }}
-  MECHA_PULP_DEBS_REPOSITORY_NAME: ${{ vars.MECHA_PULP_DEBS_REPOSITORY_NAME }}
 
 jobs:
   build:
     name: mechanix-calculator
     runs-on: ubuntu-24.04-arm
-    environment: pre-release
+    environment: canary
     continue-on-error: true
+    outputs:
+      rpm_publication: ${{ steps.publish_rpm.outputs.publication }}
+      deb_publication: ${{ steps.publish_deb.outputs.publication }}
+
+    env:
+      MECHA_PULP_USERNAME: ${{ secrets.MECHA_PULP_USERNAME }}
+      MECHA_PULP_PASSWORD: ${{ secrets.MECHA_PULP_PASSWORD }}
+      MECHA_PULP_API_URL: ${{ vars.MECHA_PULP_API_URL }}
 
     steps:
       - name: Install dependencies
@@ -127,7 +131,7 @@ jobs:
       - name: Setup | Pulp CLI
         run: |
           pipx install --force "pulp-cli==0.39.3"
-          pipx inject pulp-cli pulp-cli-deb pulp_rpm
+          pipx inject pulp-cli "pulp-cli-deb>=0.5.0" pulp_rpm
 
       - name: Configure Pulp CLI
         run: |
@@ -145,37 +149,33 @@ jobs:
             --base-url "$PULP_API_URL" \
             --overwrite
 
-      - name: Publish RPM
-        continue-on-error: true
+      - name: "Publish RPM (uploads, signs, and publishes in one step - canary is auto-distribute, updates itself)"
+        id: publish_rpm
         run: |
+          set -euo pipefail
           RPM_FILE=$(find ./dist -name "mechanix-calculator*.rpm" -type f | head -n1)
           echo "[INFO] Publishing RPM: $RPM_FILE"
 
-          pulp rpm content upload --repository="${{ vars.MECHA_PULP_RPMS_REPOSITORY_NAME }}" --file="$RPM_FILE"
+          OUTPUT=$(pulp rpm content upload --repository="${{ vars.MECHA_PULP_RPMS_REPOSITORY_NAME }}" --file="$RPM_FILE")
+          echo "publication=$(echo "$OUTPUT" | jq -r '.pulp_href')" >> "$GITHUB_OUTPUT"
 
-          PUB_HREF=$(pulp rpm publication create \
-            --repository="${{ vars.MECHA_PULP_RPMS_REPOSITORY_NAME }}" | jq -r '.pulp_href')
-
-          pulp rpm distribution update \
-            --name="${{ vars.MECHA_PULP_RPMS_REPOSITORY_NAME }}" \
-            --base-path="${{ vars.MECHA_PULP_RPMS_REPOSITORY_NAME }}" \
-            --publication="$PUB_HREF"
-
-      - name: Publish DEB
-        continue-on-error: true
+      - name: "Publish DEB (signs the package, does NOT publish - explicit distribution, not pulp_deb's \"pulp\" default)"
+        id: publish_deb
         run: |
+          set -euo pipefail
           DEB_FILE=$(find ./dist -name "mechanix-calculator*.deb" -type f | head -n1)
           echo "[INFO] Publishing DEB: $DEB_FILE"
 
-          pulp deb content upload --repository="${{ vars.MECHA_PULP_DEBS_REPOSITORY_NAME }}" --file="$DEB_FILE"
+          pulp deb content upload \
+            --repository="${{ vars.MECHA_PULP_DEBS_REPOSITORY_NAME }}" \
+            --file="$DEB_FILE" \
+            --distribution="${{ vars.MECHA_PULP_DEB_DISTRIBUTION }}" \
+            --component=main
 
-          PUB_HREF=$(pulp deb publication create \
-            --repository="${{ vars.MECHA_PULP_DEBS_REPOSITORY_NAME }}" | jq -r '.pulp_href')
-
-          pulp deb distribution update \
-            --name="${{ vars.MECHA_PULP_DEBS_REPOSITORY_NAME }}" \
-            --base-path="${{ vars.MECHA_PULP_DEBS_REPOSITORY_NAME }}" \
-            --repository="${{ vars.MECHA_PULP_DEBS_REPOSITORY_NAME }}"
+          OUTPUT=$(pulp deb publication create \
+            --repository="${{ vars.MECHA_PULP_DEBS_REPOSITORY_NAME }}" \
+            --signing-service=deb-release-signing)
+          echo "publication=$(echo "$OUTPUT" | jq -r '.pulp_href')" >> "$GITHUB_OUTPUT"
 
       - name: Upload Artifacts
         if: always()
@@ -187,3 +187,48 @@ jobs:
             ./build/elinux/aarch64/release/bundle/
             ./dist/*.rpm
             ./dist/*.deb
+
+  promote-stable:
+    name: Promote canary publication to stable
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04-arm
+    environment: stable
+
+    env:
+      MECHA_PULP_STABLE_USERNAME: ${{ secrets.MECHA_PULP_STABLE_USERNAME }}
+      MECHA_PULP_STABLE_PASSWORD: ${{ secrets.MECHA_PULP_STABLE_PASSWORD }}
+      MECHA_PULP_API_URL: ${{ vars.MECHA_PULP_API_URL }}
+
+    steps:
+      - name: Setup | Pulp CLI
+        run: |
+          pipx install --force "pulp-cli==0.39.3"
+          pipx inject pulp-cli "pulp-cli-deb>=0.5.0" pulp_rpm
+
+      - name: Configure Pulp CLI
+        run: |
+          set -euo pipefail
+          PULP_API_URL="$(printf '%s' "${MECHA_PULP_API_URL}" | tr -d '[:space:]')"
+          PULP_API_URL="${PULP_API_URL%/}"
+          pulp config create \
+            --username "$MECHA_PULP_STABLE_USERNAME" \
+            --password "$MECHA_PULP_STABLE_PASSWORD" \
+            --base-url "$PULP_API_URL" \
+            --overwrite
+
+      - name: "Promote RPM: point stable at the exact publication canary just got (no rebuild, no re-upload)"
+        if: needs.build.outputs.rpm_publication != ''
+        run: |
+          set -euo pipefail
+          pulp rpm distribution update \
+            --name="${{ vars.MECHA_PULP_RPMS_REPOSITORY_NAME }}-stable" \
+            --publication="${{ needs.build.outputs.rpm_publication }}"
+
+      - name: "Promote DEB: point stable at the exact publication canary just got (no rebuild, no re-upload)"
+        if: needs.build.outputs.deb_publication != ''
+        run: |
+          set -euo pipefail
+          pulp deb distribution update \
+            --name="${{ vars.MECHA_PULP_DEBS_REPOSITORY_NAME }}-stable" \
+            --publication="${{ needs.build.outputs.deb_publication }}"
