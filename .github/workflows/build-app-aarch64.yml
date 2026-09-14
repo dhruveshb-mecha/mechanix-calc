@@ -17,7 +17,7 @@ on:
       - "elinux/**"
 
 env:
-  FLUTTER_ELINUX_VERSION: "3.47.0"
+  FLUTTER_ELINUX_VERSION: "3.47.1"
   CARGO_INCREMENTAL: 0
   CARGO_NET_RETRY: 10
   RUST_BACKTRACE: short
@@ -130,8 +130,8 @@ jobs:
 
       - name: Setup | Pulp CLI
         run: |
-          pipx install --force "pulp-cli==0.39.3"
-          pipx inject pulp-cli "pulp-cli-deb>=0.5.0" pulp_rpm
+          pipx install --force pulp-cli
+          pipx inject pulp-cli pulp-cli-deb pulp_rpm
 
       - name: Configure Pulp CLI
         run: |
@@ -149,7 +149,7 @@ jobs:
             --base-url "$PULP_API_URL" \
             --overwrite
 
-      - name: "Publish RPM (uploads, signs, and publishes in one step - canary is auto-distribute, updates itself)"
+      - name: Publish RPM
         id: publish_rpm
         run: |
           set -euo pipefail
@@ -159,15 +159,9 @@ jobs:
           OUTPUT=$(pulp rpm content upload --repository="${{ vars.MECHA_PULP_RPMS_REPOSITORY_NAME }}" --file="$RPM_FILE")
           echo "publication=$(echo "$OUTPUT" | jq -r '.pulp_href')" >> "$GITHUB_OUTPUT"
 
-      - name: "Publish DEB (signs the package, does NOT publish - explicit distribution, not pulp_deb's \"pulp\" default)"
+      - name: Publish DEB
         id: publish_deb
         env:
-          # pulp-cli-deb's own `--signing-service` option on `publication create`
-          # does not support passing an href, despite its help text - open upstream
-          # bug
-          # https://github.com/pulp/pulp-cli-deb/issues/38
-          # https://github.com/pulp/pulp-cli-deb/pull/39
-         
           DEB_SIGNING_SERVICE_HREF: /pulp/api/v3/signing-services/01a06111-aea8-744f-89a8-0d86ae025e5d/
         run: |
           set -euo pipefail
@@ -234,8 +228,8 @@ jobs:
     steps:
       - name: Setup | Pulp CLI
         run: |
-          pipx install --force "pulp-cli==0.39.3"
-          pipx inject pulp-cli "pulp-cli-deb>=0.5.0" pulp_rpm
+          pipx install --force pulp-cli
+          pipx inject pulp-cli pulp-cli-deb pulp_rpm
 
       - name: Configure Pulp CLI
         run: |
@@ -248,7 +242,7 @@ jobs:
             --base-url "$PULP_API_URL" \
             --overwrite
 
-      - name: "Promote RPM: point stable at the exact publication canary just got (no rebuild, no re-upload)"
+      - name: Promote RPM
         if: needs.build.outputs.rpm_publication != ''
         run: |
           set -euo pipefail
@@ -256,7 +250,7 @@ jobs:
             --name="${{ vars.MECHA_PULP_RPMS_REPOSITORY_NAME }}-stable" \
             --publication="${{ needs.build.outputs.rpm_publication }}"
 
-      - name: "Promote DEB: point stable at the exact publication canary just got (no rebuild, no re-upload)"
+      - name: Promote DEB
         if: needs.build.outputs.deb_publication != ''
         run: |
           set -euo pipefail
