@@ -1,96 +1,188 @@
-import 'package:mechanix_calculator/core/utils/constant.dart';
-import 'package:mechanix_calculator/features/calculator/bloc/calculator_bloc.dart';
-import 'package:mechanix_calculator/features/calculator/bloc/calculator_event.dart';
-import 'package:mechanix_calculator/features/calculator/presentation/widgets/calculator_button.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mechanix_calculator/features/calculator/presentation/widgets/calculator_button.dart';
+
+enum CalculatorActionType {
+  number,
+  operator,
+  clear,
+  delete,
+  toggleSign,
+  percentage,
+  calculate,
+}
+
+class CalculatorButtonData {
+  final String? text;
+  final IconData? icon;
+  final CalculatorButtonType type;
+  final CalculatorActionType action;
+  final String? value;
+
+  const CalculatorButtonData({
+    this.text,
+    this.icon,
+    this.type = CalculatorButtonType.standard,
+    required this.action,
+    this.value,
+  });
+}
+
+const List<CalculatorButtonData> calculatorButtons = [
+  // Row 1
+  CalculatorButtonData(
+    text: 'AC',
+    type: CalculatorButtonType.action,
+    action: CalculatorActionType.clear,
+  ),
+  CalculatorButtonData(
+    text: '+/-',
+    type: CalculatorButtonType.action,
+    action: CalculatorActionType.toggleSign,
+  ),
+  CalculatorButtonData(
+    icon: Icons.percent,
+    type: CalculatorButtonType.action,
+    action: CalculatorActionType.percentage,
+  ),
+  CalculatorButtonData(
+    text: '÷',
+    type: CalculatorButtonType.action,
+    action: CalculatorActionType.operator,
+    value: '÷',
+  ),
+
+  // Row 2
+  CalculatorButtonData(
+    text: '7',
+    action: CalculatorActionType.number,
+    value: '7',
+  ),
+  CalculatorButtonData(
+    text: '8',
+    action: CalculatorActionType.number,
+    value: '8',
+  ),
+  CalculatorButtonData(
+    text: '9',
+    action: CalculatorActionType.number,
+    value: '9',
+  ),
+  CalculatorButtonData(
+    text: '×',
+    type: CalculatorButtonType.action,
+    action: CalculatorActionType.operator,
+    value: '×',
+  ),
+
+  // Row 3
+  CalculatorButtonData(
+    text: '4',
+    action: CalculatorActionType.number,
+    value: '4',
+  ),
+  CalculatorButtonData(
+    text: '5',
+    action: CalculatorActionType.number,
+    value: '5',
+  ),
+  CalculatorButtonData(
+    text: '6',
+    action: CalculatorActionType.number,
+    value: '6',
+  ),
+  CalculatorButtonData(
+    text: '-',
+    type: CalculatorButtonType.action,
+    action: CalculatorActionType.operator,
+    value: '-',
+  ),
+
+  // Row 4
+  CalculatorButtonData(
+    text: '1',
+    action: CalculatorActionType.number,
+    value: '1',
+  ),
+  CalculatorButtonData(
+    text: '2',
+    action: CalculatorActionType.number,
+    value: '2',
+  ),
+  CalculatorButtonData(
+    text: '3',
+    action: CalculatorActionType.number,
+    value: '3',
+  ),
+  CalculatorButtonData(
+    text: '+',
+    type: CalculatorButtonType.action,
+    action: CalculatorActionType.operator,
+    value: '+',
+  ),
+
+  // Row 5
+  CalculatorButtonData(
+    icon: Icons.backspace_outlined,
+    type: CalculatorButtonType.action,
+    action: CalculatorActionType.delete,
+  ),
+  CalculatorButtonData(
+    text: '0',
+    action: CalculatorActionType.number,
+    value: '0',
+  ),
+  CalculatorButtonData(
+    text: '.',
+    type: CalculatorButtonType.action,
+    action: CalculatorActionType.number,
+    value: '.',
+  ),
+  CalculatorButtonData(
+    text: '=',
+    type: CalculatorButtonType.primary,
+    action: CalculatorActionType.calculate,
+  ),
+];
 
 class ButtonGrid extends StatelessWidget {
-  const ButtonGrid({super.key});
+  final ValueChanged<CalculatorButtonData>? onButtonPressed;
+
+  const ButtonGrid({super.key, this.onButtonPressed});
 
   @override
   Widget build(BuildContext context) {
-    final bloc = context.read<CalculatorBloc>();
-
     return Container(
-      color: Colors.black,
-      padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 4.0),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          // Calculate the aspect ratio dynamically based on available space
-          // 4 columns and 5 rows
-          final double horizontalSpacing = 5.0 * 3; // 3 gaps between 4 columns
-          final double verticalSpacing = 4.0 * 4; // 4 gaps between 5 rows
-
+          const double crossSpacing = 8.0;
+          const double mainSpacing = 8.0;
           final double itemWidth =
-              (constraints.maxWidth - horizontalSpacing) / 4;
+              (constraints.maxWidth - (crossSpacing * 3)) / 4;
           final double itemHeight =
-              (constraints.maxHeight - verticalSpacing) / 5;
-
-          final double dynamicAspectRatio = itemWidth / itemHeight;
+              (constraints.maxHeight - (mainSpacing * 4)) / 5;
 
           return GridView.builder(
             physics: const NeverScrollableScrollPhysics(),
-            itemCount: calcGridButtons.length,
+            itemCount: calculatorButtons.length,
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 4,
-              mainAxisSpacing: 4,
-              crossAxisSpacing: 5,
-              childAspectRatio: dynamicAspectRatio,
+              mainAxisSpacing: mainSpacing,
+              crossAxisSpacing: crossSpacing,
+              childAspectRatio: itemWidth / itemHeight,
             ),
             itemBuilder: (context, index) {
-              final text = calcGridButtons[index];
-              return CalcButton(
-                text: text,
-                onTap: () => _handleTap(bloc, text),
+              final btn = calculatorButtons[index];
+              return CalculatorButton(
+                text: btn.text,
+                icon: btn.icon,
+                type: btn.type,
+                onTap: () => onButtonPressed?.call(btn),
               );
             },
           );
         },
       ),
-    );
-  }
-
-  void _handleTap(CalculatorBloc bloc, String text) {
-    final event = switch (text) {
-      'AC' => const ClearPressed(),
-      '⌫' => DeletePressed(),
-      '=' => CalculateResult(),
-      '+/-' => ToggleSignPressed(),
-      '%' => PercentagePressed(),
-      '÷' || '×' || '-' || '+' => OperatorPressed(text),
-      _ => NumberPressed(text), // '_' acts as the 'else' / default case
-    };
-
-    bloc.add(event);
-  }
-}
-
-class CalcButton extends StatelessWidget {
-  final String text;
-  final IconData? icon;
-  final VoidCallback onTap;
-
-  const CalcButton({
-    super.key,
-    required this.text,
-    required this.onTap,
-    this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isOperator = ['÷', '×', '-', '+', '='].contains(text);
-    final isAction = ['AC', '+/-', '%'].contains(text);
-    final color = (isOperator || isAction)
-        ? const Color(0xFF2C2C2C)
-        : const Color(0xFF1A1A1A);
-
-    return CalculatorButton(
-      text: text,
-      icon: text == '⌫' ? Icons.backspace_outlined : icon,
-      color: color,
-      onTap: onTap,
     );
   }
 }

@@ -7,38 +7,16 @@ abstract class CalculatorEvent extends Equatable {
   List<Object> get props => [];
 }
 
-class NumberPressed extends CalculatorEvent {
-  final String number;
-  const NumberPressed(this.number);
-
-  @override
-  List<Object> get props => [number];
-}
-
-class ExpressionChanged extends CalculatorEvent {
+class CalculateResult extends CalculatorEvent {
   final String expression;
-  const ExpressionChanged(this.expression);
+  const CalculateResult([this.expression = '']);
 
   @override
   List<Object> get props => [expression];
-}
-
-class OperatorPressed extends CalculatorEvent {
-  final String operator;
-  const OperatorPressed(this.operator);
-
-  @override
-  List<Object> get props => [operator];
 }
 
 class ClearPressed extends CalculatorEvent {
   const ClearPressed();
 }
 
-class DeletePressed extends CalculatorEvent {}
 
-class CalculateResult extends CalculatorEvent {}
-
-class ToggleSignPressed extends CalculatorEvent {}
-
-class PercentagePressed extends CalculatorEvent {}

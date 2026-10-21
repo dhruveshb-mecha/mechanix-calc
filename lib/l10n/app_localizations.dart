@@ -94,11 +94,35 @@ abstract class AppLocalizations {
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[Locale('en')];
 
-  /// No description provided for @calculator.
+  /// Title of the calculator application
   ///
   /// In en, this message translates to:
   /// **'Calculator'**
   String get calculator;
+
+  /// Error message when entering more than 15 digits in a single number
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t enter more than 15 digits'**
+  String get maxDigitsErrorMessage;
+
+  /// Error message when total expression length exceeds 100 characters
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t enter more than 100 characters'**
+  String get maxCharactersErrorMessage;
+
+  /// Error message when number of operators exceeds 20
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t enter more than 20 operations'**
+  String get maxOperationsErrorMessage;
+
+  /// Error message for invalid mathematical operation or malformed expression
+  ///
+  /// In en, this message translates to:
+  /// **'Error'**
+  String get invalidOperationsErrorMessage;
 }
 
 class _AppLocalizationsDelegate

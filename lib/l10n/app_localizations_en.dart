@@ -10,4 +10,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get calculator => 'Calculator';
+
+  @override
+  String get maxDigitsErrorMessage => 'Can\'t enter more than 15 digits';
+
+  @override
+  String get maxCharactersErrorMessage =>
+      'Can\'t enter more than 100 characters';
+
+  @override
+  String get maxOperationsErrorMessage =>
+      'Can\'t enter more than 20 operations';
+
+  @override
+  String get invalidOperationsErrorMessage => 'Error';
 }
