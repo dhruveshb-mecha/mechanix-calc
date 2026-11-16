@@ -414,5 +414,81 @@ void main() {
         );
       },
     );
+
+    testWidgets('scientific result draws exponent as raised plain digits', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: DisplayPanel(
+              calculatedExpression: '999999999×999999999',
+              result: '9.99999998×10¹⁷',
+              errorMessage: '',
+            ),
+          ),
+        ),
+      );
+
+      final exponent = tester.widget<Text>(
+        find.byKey(const ValueKey('exponent_0')),
+      );
+      expect(exponent.data, '17');
+      expect(find.textContaining('9.99999998×10', findRichText: true),
+          findsOneWidget);
+      expect(find.textContaining('¹⁷', findRichText: true), findsNothing);
+    });
+
+    testWidgets('expression being typed draws exponent as raised digits', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: DisplayPanel(
+              expression: '(-8.879999982×10²⁰)×9',
+              result: '0',
+              errorMessage: '',
+            ),
+          ),
+        ),
+      );
+
+      final exponent = tester.widget<Text>(
+        find.byKey(const ValueKey('exponent_0')),
+      );
+      expect(exponent.data, '20');
+      expect(find.textContaining('²⁰', findRichText: true), findsNothing);
+      expect(
+        find.textContaining('(-8.879999982×10', findRichText: true),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('text with two exponents renders without key conflicts', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: DisplayPanel(
+              expression: '9.9×10¹⁷+1.2×10³',
+              result: '0',
+              errorMessage: '',
+            ),
+          ),
+        ),
+      );
+
+      expect(tester.takeException(), isNull);
+      expect(
+        tester.widget<Text>(find.byKey(const ValueKey('exponent_0'))).data,
+        '17',
+      );
+      expect(
+        tester.widget<Text>(find.byKey(const ValueKey('exponent_1'))).data,
+        '3',
+      );
+    });
   });
 }

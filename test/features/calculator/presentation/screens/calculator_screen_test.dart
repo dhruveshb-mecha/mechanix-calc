@@ -45,6 +45,27 @@ void main() {
       return find.byKey(const Key('history_button'));
     }
 
+    // The bloc is created in setUp (outside the test's fake-async zone), so
+    // a calculation result can land after pumpAndSettle returns, leaving the
+    // history button disabled. Wait for history to exist, rebuild, then open.
+    Future<void> openHistory(WidgetTester tester) async {
+      await tester.runAsync(() async {
+        for (var i = 0; i < 100 && bloc.state.history.isEmpty; i++) {
+          await Future<void>.delayed(const Duration(milliseconds: 10));
+        }
+      });
+      expect(bloc.state.history, isNotEmpty);
+      await tester.pumpAndSettle();
+
+      final onPressed = tester
+          .widget<MechanixIconButton>(getHistoryButton())
+          .onPressed;
+      expect(onPressed, isNotNull, reason: 'history button still disabled');
+      onPressed!();
+      await tester.pumpAndSettle();
+      expect(find.byType(HistoryOverlay), findsOneWidget);
+    }
+
     testWidgets('renders all initial UI components properly', (tester) async {
       await tester.pumpWidget(createScreen());
 
@@ -257,6 +278,27 @@ void main() {
         expect(bloc.state.result, '8');
       });
 
+      for (final calcKey in [
+        LogicalKeyboardKey.equal,
+        LogicalKeyboardKey.enter,
+        LogicalKeyboardKey.numpadEnter,
+        LogicalKeyboardKey.numpadEqual,
+      ]) {
+        testWidgets('${calcKey.keyLabel} key calculates the result', (
+          tester,
+        ) async {
+          await tester.pumpWidget(createScreen());
+
+          await tester.sendKeyEvent(LogicalKeyboardKey.digit2);
+          await tester.sendKeyEvent(LogicalKeyboardKey.numpadAdd);
+          await tester.sendKeyEvent(LogicalKeyboardKey.digit3);
+          await tester.sendKeyEvent(calcKey);
+          await tester.pumpAndSettle();
+
+          expect(bloc.state.result, '5');
+        });
+      }
+
       testWidgets('handles backspace key', (tester) async {
         await tester.pumpWidget(createScreen());
 
@@ -291,6 +333,99 @@ void main() {
         expect(find.byType(HistoryOverlay), findsNothing);
         expect(find.byIcon(Icons.close), findsNothing);
       });
+
+      for (final entry in {
+        'digit': LogicalKeyboardKey.digit7,
+        'operator': LogicalKeyboardKey.numpadAdd,
+        'backspace': LogicalKeyboardKey.backspace,
+      }.entries) {
+        testWidgets('typing a ${entry.key} key closes history when open', (
+          tester,
+        ) async {
+          await tester.pumpWidget(createScreen());
+
+          await performCalculation(
+            tester,
+            firstNumber: '2',
+            operator: '+',
+            secondNumber: '2',
+          );
+
+          await openHistory(tester);
+
+          await tester.sendKeyEvent(entry.value);
+          await tester.pumpAndSettle();
+
+          expect(find.byType(HistoryOverlay), findsNothing);
+        });
+      }
+
+      testWidgets('digit typed with history open is also entered', (
+        tester,
+      ) async {
+        await tester.pumpWidget(createScreen());
+
+        await performCalculation(
+          tester,
+          firstNumber: '2',
+          operator: '+',
+          secondNumber: '2',
+        );
+
+        await openHistory(tester);
+
+        await tester.sendKeyEvent(LogicalKeyboardKey.digit7);
+        await tester.pumpAndSettle();
+
+        expect(find.byType(HistoryOverlay), findsNothing);
+        expect(find.text('7').first, findsOneWidget);
+      });
+
+      testWidgets(
+        'backspacing a reused scientific result to empty shows 0',
+        (tester) async {
+          await tester.pumpWidget(createScreen());
+
+          bloc.add(const CalculateResult('999999999×999999999'));
+          await tester.runAsync(() async {
+            for (var i = 0; i < 100 && bloc.state.history.isEmpty; i++) {
+              await Future<void>.delayed(const Duration(milliseconds: 10));
+            }
+          });
+          await tester.pumpAndSettle();
+          expect(bloc.state.result, '9.99999998×10¹⁷');
+
+          // 9.99999998×10¹⁷+9, then backspace one character at a time.
+          await tester.sendKeyEvent(LogicalKeyboardKey.numpadAdd);
+          await tester.sendKeyEvent(LogicalKeyboardKey.digit9);
+          await tester.sendKeyEvent(LogicalKeyboardKey.backspace); // 9
+          await tester.sendKeyEvent(LogicalKeyboardKey.backspace); // +
+          await tester.sendKeyEvent(LogicalKeyboardKey.backspace); // ⁷
+          await tester.pumpAndSettle();
+          expect(
+            find.textContaining('9.99999998×10', findRichText: true),
+            findsOneWidget,
+          );
+          // "9.99999998×10¹" has 14 characters left.
+          for (var i = 0; i < 14; i++) {
+            await tester.sendKeyEvent(LogicalKeyboardKey.backspace);
+          }
+
+          await tester.runAsync(() async {
+            for (var i = 0; i < 100 && bloc.state.result != '0'; i++) {
+              await Future<void>.delayed(const Duration(milliseconds: 10));
+            }
+          });
+          await tester.pumpAndSettle();
+
+          expect(bloc.state.result, '0');
+          expect(bloc.state.history, isNotEmpty);
+          expect(
+            find.textContaining('9.99999998×10', findRichText: true),
+            findsNothing,
+          );
+        },
+      );
 
       testWidgets('Escape key clears calculation when history is closed', (
         tester,

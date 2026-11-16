@@ -321,9 +321,28 @@ void main() {
         expect(res.expression, '5.25');
       });
 
+      test('handlePercentage appends % after a bracketed number', () {
+        expect(ExpressionBuilder.handlePercentage('(-5)').expression, '(-5)%');
+      });
+
       test('handlePercentage appends %', () {
         final res = ExpressionBuilder.handlePercentage('50');
         expect(res.expression, '50%');
+      });
+
+      test('operator after % keeps the % and appends the operator', () {
+        expect(
+          ExpressionBuilder.handleOperator('200+10%', '+').expression,
+          '200+10%+',
+        );
+        expect(
+          ExpressionBuilder.handleOperator('50%', '×').expression,
+          '50%×',
+        );
+      });
+
+      test('operator after a normal operator still replaces it', () {
+        expect(ExpressionBuilder.handleOperator('200+', '-').expression, '200-');
       });
     });
 
@@ -355,6 +374,96 @@ void main() {
         final expr100 = '1' * 100;
         final res = ExpressionBuilder.handleNumber(expr100, '2');
         expect(res.errorMessage, maxCharactersErrorMessage);
+      });
+    });
+
+    group('scientific numbers', () {
+      test('operator after a scientific result is appended', () {
+        expect(
+          ExpressionBuilder.handleOperator(
+            '',
+            '+',
+            previousResult: '9.99999998×10¹⁷',
+          ).expression,
+          '9.99999998×10¹⁷+',
+        );
+      });
+
+      test('digits cannot be typed straight after an exponent', () {
+        expect(
+          ExpressionBuilder.handleNumber('9.99999998×10¹⁷', '5').expression,
+          '9.99999998×10¹⁷',
+        );
+      });
+
+      test('toggle sign wraps and unwraps a scientific number', () {
+        final negated = ExpressionBuilder.handleToggleSign('9.9×10¹⁷');
+        expect(negated.expression, '(-9.9×10¹⁷)');
+        expect(
+          ExpressionBuilder.handleToggleSign(negated.expression).expression,
+          '9.9×10¹⁷',
+        );
+        expect(
+          ExpressionBuilder.handleToggleSign('-9.9×10¹⁷').expression,
+          '9.9×10¹⁷',
+        );
+      });
+    });
+
+    group('scientific numbers are single tokens', () {
+      List<String> backspaceSteps(String expression) {
+        final steps = [expression];
+        while (steps.last.isNotEmpty) {
+          steps.add(ExpressionBuilder.handleDelete(steps.last).expression);
+        }
+        return steps;
+      }
+
+      test('backspace removes exponent digits one by one, then the rest', () {
+        expect(backspaceSteps('9.9×10¹⁷'), [
+          '9.9×10¹⁷',
+          '9.9×10¹',
+          '9.9×10',
+          '9.9×1',
+          '9.9×',
+          '9.9',
+          '9.',
+          '9',
+          '',
+        ]);
+      });
+
+      test('backspace inside a negated scientific number keeps parens', () {
+        expect(backspaceSteps('2×(-9.9×10¹⁷)'), [
+          '2×(-9.9×10¹⁷)',
+          '2×(-9.9×10¹)',
+          '2×(-9.9×10)',
+          '2×(-9.9×1)',
+          '2×(-9.9×)',
+          '2×(-9.9)',
+          '2×(-9.)',
+          '2×(-9)',
+          '2×',
+          '2',
+          '',
+        ]);
+      });
+
+      test('backspace drops a lone exponent sign', () {
+        expect(ExpressionBuilder.handleDelete('1.2×10⁻⁷').expression, '1.2×10');
+      });
+
+      test('% cannot follow an exponent', () {
+        expect(
+          ExpressionBuilder.handlePercentage('9.9×10¹⁷').expression,
+          '9.9×10¹⁷',
+        );
+      });
+
+      test('× inside a scientific number is not counted as an operation', () {
+        expect(ExpressionBuilder.countOperations('9.9×10¹⁷'), 0);
+        expect(ExpressionBuilder.countOperations('9.9×10¹⁷+1'), 1);
+        expect(ExpressionBuilder.countOperations('5×10'), 1);
       });
     });
   });

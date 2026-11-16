@@ -78,9 +78,15 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
       _onClearPressed();
       return;
     }
-    final res = ExpressionBuilder.handleDelete(_expressionNotifier.value);
+    final previous = _expressionNotifier.value;
+    final res = ExpressionBuilder.handleDelete(previous);
     _expressionNotifier.value = res.expression;
     _errorMessageNotifier.value = res.errorMessage;
+
+    // Clear the result when the expression becomes empty to avoid showing the previous result.
+    if (previous.isNotEmpty && res.expression.isEmpty) {
+      context.read<CalculatorBloc>().add(const ClearPressed());
+    }
   }
 
   void _onToggleSignPressed() {
@@ -151,13 +157,22 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     // Special case: Shift + '=' => '+'
     if (key == LogicalKeyboardKey.equal &&
         HardwareKeyboard.instance.isShiftPressed) {
+      _closeHistory();
       _onOperatorPressed('+');
       return;
     }
 
     final action = logicalKeyboardKeyMap[key];
     if (action != null) {
+      // Same as tapping the button grid: typing closes the history panel.
+      _closeHistory();
       _handleButtonAction(action);
+    }
+  }
+
+  void _closeHistory() {
+    if (_isHistoryOpenNotifier.value) {
+      _isHistoryOpenNotifier.value = false;
     }
   }
 
